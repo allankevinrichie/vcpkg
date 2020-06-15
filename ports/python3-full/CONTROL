@@ -1,0 +1,5 @@
+Source: python3-full
+Version: 3.8.3
+Homepage: https://github.com/python/cpython
+Description: The Python programming language as an embeddable library and interactive shell
+Build-Depends: libffi, openssl, zlib (!uwp&!windows)

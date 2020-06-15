@@ -1,0 +1,69 @@
+diff --git a/Modules/Setup b/Modules/Setup
+index 983fa01..6bd22e7 100644
+--- a/Modules/Setup
++++ b/Modules/Setup
+@@ -334,7 +334,7 @@ _symtable symtablemodule.c
+ # Andrew Kuchling's zlib module.
+ # This require zlib 1.1.3 (or later).
+ # See http://www.gzip.org/zlib/
+-#zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
++zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
+ 
+ # Interface to the Expat XML parser
+ # More information on Expat can be found at www.libexpat.org.
+diff --git a/PCbuild/get_externals_.bat b/PCbuild/get_externals_.bat
+new file mode 100644
+index 0000000..7c2c7cd
+--- /dev/null
++++ b/PCbuild/get_externals_.bat
+@@ -0,0 +1,49 @@
++if NOT DEFINED PCBUILD (set PCBUILD=%~dp0)
++if NOT DEFINED EXTERNALS_DIR (set EXTERNALS_DIR=%PCBUILD%\..\externals)
++
++echo.Fetching external libraries...
++
++if NOT DEFINED ORG (set ORG=python)
++
++set libraries=
++set libraries=%libraries%                                       	bzip2-1.0.6
++set libraries=%libraries%  										libffi-3.3.0-rc0-r1
++set libraries=%libraries%     										openssl-1.1.1f
++set libraries=%libraries%                                       	sqlite-3.31.1.0
++set libraries=%libraries% 											tcl-core-8.6.9.0
++set libraries=%libraries% 											tk-8.6.9.0
++set libraries=%libraries% 											tix-8.4.3.6
++set libraries=%libraries%                                       	xz-5.2.2
++set libraries=%libraries%                                       	zlib-1.2.11
++
++for %%e in (%libraries%) do (
++    if exist "%EXTERNALS_DIR%\%%e" (
++        echo.%%e already exists, skipping.
++    ) else if NOT DEFINED PYTHON (
++        echo.Fetching %%e with git...
++        %1 clone --depth 1 https://github.com/%ORG%/cpython-source-deps --branch %%e "%EXTERNALS_DIR%\%%e"
++    ) else (
++        echo.Fetching %%e...
++        %PYTHON% -E "%PCBUILD%\get_external.py" -O %ORG% -e "%EXTERNALS_DIR%" %%e
++    )
++)
++
++echo.Fetching external binaries...
++
++set binaries=
++set binaries=%binaries% libffi
++set binaries=%binaries% openssl-bin-1.1.1f
++set binaries=%binaries% tcltk-8.6.9.0
++set binaries=%binaries% nasm-2.11.06
++
++for %%b in (%binaries%) do (
++    if exist "%EXTERNALS_DIR%\%%b" (
++        echo.%%b already exists, skipping.
++    ) else if NOT DEFINED PYTHON (
++        echo.Fetching %%b with git...
++        %1 clone --depth 1 https://github.com/%ORG%/cpython-bin-deps --branch %%b "%EXTERNALS_DIR%\%%b"
++    ) else (
++        echo.Fetching %%b...
++        %PYTHON% -E "%PCBUILD%\get_external.py" -b -O %ORG% -e "%EXTERNALS_DIR%" %%b
++    )
++)
+\ No newline at end of file

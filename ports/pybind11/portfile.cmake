@@ -3,8 +3,8 @@ include(vcpkg_common_functions)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO pybind/pybind11
-    REF 80d452484c5409444b0ec19383faa84bb7a4d351 # v2.4.3
-    SHA512 987f8c075ff3e4f90ab27a6121f3767a82939e35cd2143649819c8d39b09d1c234d39fa204ed5f6bd1d9ec97c275f590df358769d7726a16ccb720a91c550883
+    REF v2.5.0
+    SHA512 7f3a9c71916749436898d1844ef6b112baf0817a386308b5df8dec2a912ef4b6a932b94965e98f227c49fa77312f131972a6039f23b84a3daf6442a8ab0be7c2
     HEAD_REF master
 )
 
@@ -23,10 +23,10 @@ vcpkg_configure_cmake(
         -DPYTHON_MODULE_EXTENSION=.dll
     OPTIONS_RELEASE
         -DPYTHON_IS_DEBUG=OFF
-        -DPYTHON_LIBRARIES=${CURRENT_INSTALLED_DIR}/lib/python36.lib
+        -DPYTHON_LIBRARIES=${CURRENT_INSTALLED_DIR}/lib/python38.lib
     OPTIONS_DEBUG
         -DPYTHON_IS_DEBUG=ON
-        -DPYTHON_LIBRARIES=${CURRENT_INSTALLED_DIR}/debug/lib/python36_d.lib
+        -DPYTHON_LIBRARIES=${CURRENT_INSTALLED_DIR}/debug/lib/python38_d.lib
 )
 
 vcpkg_install_cmake()
