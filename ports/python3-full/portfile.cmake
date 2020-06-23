@@ -58,6 +58,7 @@ if (VCPKG_TARGET_IS_WINDOWS)
 		PLATFORM ${BUILD_ARCH}
 		OPTIONS /p:IncludeExternals=true /p:IncludeCTypes=true /p:IncludeSSL=true /p:IncludeTkinter=true)
 
+	# install python public headers
 	file(GLOB HEADERS ${SOURCE_PATH}/Include/*.h)
 	file(GLOB CPYTHON_HEADERS ${SOURCE_PATH}/Include/cpython/*.h)
 	file(INSTALL
@@ -71,24 +72,87 @@ if (VCPKG_TARGET_IS_WINDOWS)
 		DESTINATION
 			"${CURRENT_PACKAGES_DIR}/include/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/cpython"
 	)
-	file(INSTALL
+	
+	# install shared libraries
+	set(
+		PYTHON38_SHARED_BINARIES_PATTERNS
+		"libcrypto*.dll;libffi*.dll;libssl*.dll;tcl86t.dll;tk86t.dll;vcruntime140*.dll"
+	)
+	set(PYTHON38_SHARED_BINARIES="")
+	foreach(PATTERN ${PYTHON38_SHARED_BINARIES_PATTERNS})
+		file(GLOB BINARIES ${SOURCE_PATH}/PCBuild/${OUT_DIR}/${PATTERN})
+		file(INSTALL ${BINARIES} DESTINATION "${CURRENT_PACKAGES_DIR}/share/bin")
+		set(PYTHON38_SHARED_BINARIES "${BINARIES};${PYTHON38_SHARED_BINARIES}")
+	endforeach()
+	
+	# install python packages
+	file(
+		INSTALL
 			"${SOURCE_PATH}/Lib"
 		DESTINATION
-			"${CURRENT_PACKAGES_DIR}/share/python${PYTHON_VERSION_MAJOR}"
+			"${CURRENT_PACKAGES_DIR}/share/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}"
 	)
-	
-	file(GLOB PYD ${SOURCE_PATH}/PCBuild/${OUT_DIR}/*[!d].pyd)
-	file(INSTALL ${PYD} DESTINATION "${CURRENT_PACKAGES_DIR}/share/python${PYTHON_VERSION_MAJOR}/Lib")
-	
+	file(GLOB PYD ${SOURCE_PATH}/PCBuild/${OUT_DIR}/*.pyd)
+	file(
+		INSTALL 
+			${PYD} 
+		DESTINATION 
+			"${CURRENT_PACKAGES_DIR}/share/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/lib"
+		PATTERN "*_d.pyd" EXCLUDE
+	)
+
+	# install compiled binaries and libraries
+	file(GLOB PY_EXEC ${SOURCE_PATH}/PCBuild/${OUT_DIR}/*.exe)
+	file(GLOB PY_DLL ${SOURCE_PATH}/PCBuild/${OUT_DIR}/*.dll)
+	list(REMOVE_ITEM PY_DLL ${PYTHON38_SHARED_BINARIES})
+	file(GLOB PY_LIB ${SOURCE_PATH}/PCBuild/${OUT_DIR}/python*.lib)
 	if(NOT DEFINED VCPKG_BUILD_TYPE OR VCPKG_BUILD_TYPE STREQUAL "release")
-		file(INSTALL ${SOURCE_PATH}/PCBuild/${OUT_DIR}/python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}.dll DESTINATION ${CURRENT_PACKAGES_DIR}/bin)
-		file(INSTALL ${SOURCE_PATH}/PCBuild/${OUT_DIR}/python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}.lib DESTINATION ${CURRENT_PACKAGES_DIR}/lib)
+		file(
+			INSTALL 
+				${PY_EXEC} 
+			DESTINATION 
+				${CURRENT_PACKAGES_DIR}/exe
+			PATTERN "*_d.exe" EXCLUDE
+		)
+		file(
+			INSTALL 
+				${PY_DLL} 
+			DESTINATION 
+				${CURRENT_PACKAGES_DIR}/bin
+			PATTERN "*_d.dll" EXCLUDE
+		)
+		
+		file(
+			INSTALL 
+				${PY_LIB} 
+			DESTINATION 
+				${CURRENT_PACKAGES_DIR}/lib
+			PATTERN "*_dstub.lib" EXCLUDE
+			PATTERN "*_d.lib" EXCLUDE
+		)
 	endif()
-	
 	if(NOT DEFINED VCPKG_BUILD_TYPE OR VCPKG_BUILD_TYPE STREQUAL "debug")
-		file(INSTALL ${SOURCE_PATH}/PCBuild/${OUT_DIR}/python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}_d.dll DESTINATION ${CURRENT_PACKAGES_DIR}/debug/bin)
-		file(INSTALL ${SOURCE_PATH}/PCBuild/${OUT_DIR}/python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}_d.lib DESTINATION ${CURRENT_PACKAGES_DIR}/debug/lib)
-		vcpkg_copy_pdbs()
+		file(
+			INSTALL 
+				${PY_EXEC} 
+			DESTINATION 
+				${CURRENT_PACKAGES_DIR}/debug/exe
+			FILES_MATCHING PATTERN "*_d.exe"
+		)
+		file(
+			INSTALL 
+				${PY_DLL} 
+			DESTINATION 
+				${CURRENT_PACKAGES_DIR}/debug/bin
+			FILES_MATCHING PATTERN "*_d.dll"
+		)
+		file(
+			INSTALL
+				${PY_LIB}
+			DESTINATION 
+				${CURRENT_PACKAGES_DIR}/debug/lib
+			FILES_MATCHING PATTERN "*_d*.lib"
+		)
 	endif()
 
 	# Handle copyright
